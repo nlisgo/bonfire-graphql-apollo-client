@@ -164,7 +164,7 @@ const token = await pipe(
 
 // 2. Create authenticated client
 const authClient = createApolloClient({
-  uri: process.env.GRAPHQL_URI,
+  uri: process.env.BONFIRE_GRAPHQL_URI,
   headers: { Authorization: `Bearer ${token}` }
 });
 

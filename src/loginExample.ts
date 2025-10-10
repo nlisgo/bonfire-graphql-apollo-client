@@ -27,20 +27,20 @@ interface LoginVariables {
  * Validates environment variables
  */
 function validateEnv(): E.Either<Error, { uri: string; emailOrUsername: string; password: string }> {
-  const uri = process.env.GRAPHQL_URI;
-  const emailOrUsername = process.env.USERNAME; // Using USERNAME env var for emailOrUsername
-  const password = process.env.PASSWORD;
+  const uri = process.env.BONFIRE_GRAPHQL_URI;
+  const emailOrUsername = process.env.BONFIRE_USERNAME; // Using BONFIRE_USERNAME env var for emailOrUsername
+  const password = process.env.BONFIRE_PASSWORD;
 
   if (!uri) {
-    return E.left(new Error('GRAPHQL_URI environment variable is not set'));
+    return E.left(new Error('BONFIRE_GRAPHQL_URI environment variable is not set'));
   }
 
   if (!emailOrUsername) {
-    return E.left(new Error('USERNAME environment variable is not set'));
+    return E.left(new Error('BONFIRE_USERNAME environment variable is not set'));
   }
 
   if (!password) {
-    return E.left(new Error('PASSWORD environment variable is not set'));
+    return E.left(new Error('BONFIRE_PASSWORD environment variable is not set'));
   }
 
   return E.right({ uri, emailOrUsername, password });

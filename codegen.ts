@@ -4,7 +4,7 @@ import 'dotenv/config';
 const config: CodegenConfig = {
   // Option 1: Load schema from GraphQL endpoint (with introspection)
   // Uncomment this if your API supports introspection:
-  schema: process.env.GRAPHQL_URI || 'https://api.example.com/graphql',
+  schema: process.env.BONFIRE_GRAPHQL_URI || 'https://api.example.com/graphql',
 
   // Option 2: Load schema from local file
   // Uncomment this if you have a schema file:
@@ -13,7 +13,7 @@ const config: CodegenConfig = {
   // Option 3: Load schema with authentication headers
   // Uncomment and modify if your endpoint requires authentication:
   // schema: {
-  //   [process.env.GRAPHQL_URI || 'https://api.example.com/graphql']: {
+  //   [process.env.BONFIRE_GRAPHQL_URI || 'https://api.example.com/graphql']: {
   //     headers: {
   //       Authorization: `Bearer ${process.env.AUTH_TOKEN || ''}`,
   //     },

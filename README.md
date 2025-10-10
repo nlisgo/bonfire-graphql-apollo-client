@@ -47,9 +47,9 @@ cp .env.example .env
 Edit `.env` with your actual credentials:
 
 ```env
-GRAPHQL_URI=https://your-api.com/graphql
-USERNAME=your_actual_username
-PASSWORD=your_actual_password
+BONFIRE_GRAPHQL_URI=https://your-api.com/graphql
+BONFIRE_USERNAME=your_actual_username
+BONFIRE_PASSWORD=your_actual_password
 ```
 
 **Note:** The `.env` file is ignored by git to keep your credentials safe.
@@ -70,7 +70,7 @@ This project supports **GraphQL Code Generation** to automatically generate Type
 If your GraphQL API supports introspection, you can generate types directly from it:
 
 ```bash
-# Make sure your GRAPHQL_URI is set in .env
+# Make sure your BONFIRE_GRAPHQL_URI is set in .env
 npm run codegen
 ```
 
@@ -91,7 +91,7 @@ If your endpoint requires authentication, edit `codegen.ts`:
 
 ```typescript
 schema: {
-  [process.env.GRAPHQL_URI]: {
+  [process.env.BONFIRE_GRAPHQL_URI]: {
     headers: {
       Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
     },

@@ -39,12 +39,12 @@ async function loginTyped() {
   console.log('Type-Safe Login Example\n');
 
   // Validate environment
-  const uri = process.env.GRAPHQL_URI;
-  const emailOrUsername = process.env.USERNAME;
-  const password = process.env.PASSWORD;
+  const uri = process.env.BONFIRE_GRAPHQL_URI;
+  const emailOrUsername = process.env.BONFIRE_USERNAME;
+  const password = process.env.BONFIRE_PASSWORD;
 
   if (!uri || !emailOrUsername || !password) {
-    console.error('Please set GRAPHQL_URI, USERNAME, and PASSWORD in .env');
+    console.error('Please set BONFIRE_GRAPHQL_URI, BONFIRE_USERNAME, and BONFIRE_PASSWORD in .env');
     return;
   }
 

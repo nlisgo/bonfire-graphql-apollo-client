@@ -19,7 +19,7 @@ Edit `codegen.ts` to point to your GraphQL schema:
 
 **Option A: From API endpoint (recommended)**
 ```typescript
-schema: process.env.GRAPHQL_URI || 'https://api.example.com/graphql',
+schema: process.env.BONFIRE_GRAPHQL_URI || 'https://api.example.com/graphql',
 ```
 
 **Option B: From local file**
@@ -30,7 +30,7 @@ schema: './schema.graphql',
 **Option C: With authentication**
 ```typescript
 schema: {
-  [process.env.GRAPHQL_URI]: {
+  [process.env.BONFIRE_GRAPHQL_URI]: {
     headers: {
       Authorization: `Bearer ${process.env.AUTH_TOKEN}`,
     },
@@ -226,7 +226,7 @@ const MY_QUERY = `...`;           // ✗ Wrong
 ### Error: "Unable to connect to GraphQL endpoint"
 
 **Solutions:**
-1. Check `GRAPHQL_URI` in your `.env` file
+1. Check `BONFIRE_GRAPHQL_URI` in your `.env` file
 2. Verify the endpoint is accessible
 3. Add authentication headers if needed (see codegen.ts)
 4. Use a local schema file instead
