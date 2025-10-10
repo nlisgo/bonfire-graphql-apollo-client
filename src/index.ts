@@ -49,7 +49,7 @@ async function main() {
   // Initialize Apollo Client
   // Replace with your actual GraphQL endpoint
   const client = createApolloClient({
-    uri: 'https://api.example.com/graphql',
+    uri: 'https://openscience.network/api/graphql',
     headers: {
       'Authorization': 'Bearer your-token-here',
     },

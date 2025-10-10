@@ -21,7 +21,7 @@ function validateEnv(): E.Either<Error, {
   uri: string;
   credentials?: { emailOrUsername: string; password: string }
 }> {
-  const uri = process.env.BONFIRE_GRAPHQL_URI;
+  const uri = process.env.BONFIRE_GRAPHQL_URI || 'https://openscience.network/api/graphql';
   const emailOrUsername = process.env.BONFIRE_USERNAME;
   const password = process.env.BONFIRE_PASSWORD;
 
