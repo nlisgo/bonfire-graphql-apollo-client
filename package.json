@@ -1,0 +1,35 @@
+{
+  "name": "bonfire-graphql-apollo-client",
+  "version": "1.0.0",
+  "description": "TypeScript Apollo Client for GraphQL API",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "login": "ts-node src/loginExample.ts",
+    "login:typed": "ts-node src/loginTyped.ts",
+    "fetch-posts": "ts-node src/fetchAllPosts.ts",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch"
+  },
+  "keywords": ["graphql", "apollo", "typescript"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/client": "^4.0.7",
+    "graphql": "^16.9.0",
+    "cross-fetch": "^4.0.0",
+    "fp-ts": "^2.16.9",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/typescript": "^4.1.2",
+    "@graphql-codegen/typescript-operations": "^4.4.2",
+    "@graphql-codegen/typed-document-node": "^5.0.12",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "ts-node": "^10.9.2"
+  }
+}
