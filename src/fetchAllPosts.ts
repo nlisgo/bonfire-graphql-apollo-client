@@ -260,16 +260,12 @@ async function main() {
 
       // Display first few posts as examples
       console.log('Sample posts:');
-      allPosts.slice(0, 5).forEach((post, index) => {
+      allPosts.forEach((post, index) => {
         console.log(`\n${index + 1}. Post ID: ${post.id}`);
         console.log(`   Title: ${post.postContent?.name || '(no title)'}`);
         console.log(`   Summary: ${post.postContent?.summary?.substring(0, 100) || '(no summary)'}...`);
         console.log(`   HTML Body: ${post.postContent?.htmlBody?.substring(0, 100) || '(no htmlBody)'}...`)
       });
-
-      if (allPosts.length > 5) {
-        console.log(`\n... and ${allPosts.length - 5} more posts`);
-      }
 
       return allPosts;
     }),
