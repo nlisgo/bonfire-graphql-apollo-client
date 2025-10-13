@@ -5,7 +5,7 @@ node_modules/
 dist/
 
 # Generated code
-src/generated/
+# src/generated/
 
 # TypeScript
 *.tsbuildinfo
