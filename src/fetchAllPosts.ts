@@ -45,36 +45,56 @@ function validateEnv(): E.Either<Error, {
 }
 
 /**
- * Fetches a single page of posts
+ * Fetches a single page of posts with detailed error logging
  */
 function fetchPostsPage(
   client: ReturnType<typeof createApolloClient>,
   pageSize: number,
-  cursor?: string | null
+  cursor?: string | null,
+  pageNumber: number = 1
 ): TE.TaskEither<Error, GetPostsQuery> {
-  return queryTE<GetPostsQuery, GetPostsQueryVariables>(
-    client,
-    GetPostsDocument,
-    { first: pageSize, after: cursor || undefined }
+  return pipe(
+    queryTE<GetPostsQuery, GetPostsQueryVariables>(
+      client,
+      GetPostsDocument,
+      { first: pageSize, after: cursor || undefined }
+    ),
+    TE.mapLeft((error) => {
+      console.error(`  ✗ Error fetching page ${pageNumber}:`, error.message);
+      console.error(`     Cursor: ${cursor || '(initial)'}`);
+      return new Error(`Failed to fetch page ${pageNumber}: ${error.message}`);
+    })
   );
 }
 
 /**
- * Recursively fetches all pages of posts
+ * Helper function to add delay between requests
+ */
+function delay(ms: number): TE.TaskEither<never, void> {
+  return TE.rightTask(() => new Promise(resolve => setTimeout(resolve, ms)));
+}
+
+/**
+ * Recursively fetches all pages of posts with retry logic
  */
 function fetchAllPostsRecursive(
   client: ReturnType<typeof createApolloClient>,
   pageSize: number,
   allPosts: Array<any> = [],
   cursor?: string | null,
-  pageNumber: number = 1
+  pageNumber: number = 1,
+  retryCount: number = 0,
+  maxRetries: number = 3
 ): TE.TaskEither<Error, Array<any>> {
   return pipe(
-    fetchPostsPage(client, pageSize, cursor),
+    // Add a small delay between requests to avoid overwhelming the API
+    pageNumber > 1 ? delay(500) : TE.right(undefined),
+    TE.chain(() => fetchPostsPage(client, pageSize, cursor, pageNumber)),
     TE.chain((data) => {
       const posts = data.posts;
 
       if (!posts?.edges) {
+        console.log(`  Page ${pageNumber}: No more posts available`);
         return TE.right(allPosts);
       }
 
@@ -88,6 +108,13 @@ function fetchAllPostsRecursive(
 
       console.log(`  Page ${pageNumber}: Fetched ${newPosts.length} posts (total: ${updatedPosts.length})`);
 
+      // Safety check: limit maximum pages to prevent infinite loops
+      const maxPages = 50; // Safety limit
+      if (pageNumber >= maxPages) {
+        console.log(`  ⚠ Reached maximum page limit (${maxPages}). Stopping pagination.`);
+        return TE.right(updatedPosts);
+      }
+
       // Check if there are more pages
       if (posts.pageInfo.hasNextPage && posts.pageInfo.endCursor) {
         // Recursively fetch the next page
@@ -96,12 +123,41 @@ function fetchAllPostsRecursive(
           pageSize,
           updatedPosts,
           posts.pageInfo.endCursor,
-          pageNumber + 1
+          pageNumber + 1,
+          0, // Reset retry count for next page
+          maxRetries
         );
       }
 
       // No more pages, return all accumulated posts
+      console.log(`  ✓ Pagination complete: No more pages available`);
       return TE.right(updatedPosts);
+    }),
+    TE.orElse((error) => {
+      // Retry logic for failed requests with exponential backoff
+      if (retryCount < maxRetries) {
+        const backoffDelay = 1000 * Math.pow(2, retryCount); // 1s, 2s, 4s
+        console.log(`  ⟳ Retrying page ${pageNumber} (attempt ${retryCount + 1}/${maxRetries}) after ${backoffDelay}ms delay...`);
+        return pipe(
+          delay(backoffDelay),
+          TE.chain(() => fetchAllPostsRecursive(
+            client,
+            pageSize,
+            allPosts,
+            cursor,
+            pageNumber,
+            retryCount + 1,
+            maxRetries
+          ))
+        );
+      }
+
+      // Max retries reached, but return what we have so far instead of failing completely
+      console.error(`  ✗ Failed to fetch page ${pageNumber} after ${maxRetries} retries`);
+      console.log(`  ⚠ Returning ${allPosts.length} posts fetched before the error\n`);
+
+      // Return partial results instead of complete failure
+      return TE.right(allPosts);
     })
   );
 }
@@ -143,7 +199,7 @@ async function main() {
     credentials
       ? pipe(
           // With authentication: login first, then create authenticated client
-          TE.right(createApolloClient({ uri })),
+          TE.right(createApolloClient({ uri, timeout: 30000 })),
           TE.chain((unauthClient) => {
             console.log('Step 1: Logging in...');
             return pipe(
@@ -169,6 +225,7 @@ async function main() {
               headers: {
                 'Authorization': `Bearer ${token}`,
               },
+              timeout: 30000, // 30 second timeout
             });
             console.log('✓ Authenticated client created with Authorization header\n');
             return TE.right(authenticatedClient);
@@ -178,7 +235,7 @@ async function main() {
           // Without authentication: create unauthenticated client directly
           TE.right(() => {
             console.log('Step 1: Creating unauthenticated client...');
-            const client = createApolloClient({ uri });
+            const client = createApolloClient({ uri, timeout: 30000 }); // 30 second timeout
             console.log('✓ Unauthenticated client created\n');
             return client;
           }),
@@ -193,7 +250,12 @@ async function main() {
     }),
     // Display results
     TE.map((allPosts) => {
-      console.log(`\n✓ Successfully fetched all posts!`);
+      if (allPosts.length === 0) {
+        console.log(`\n⚠ No posts were fetched`);
+        return allPosts;
+      }
+
+      console.log(`\n✓ Successfully fetched posts!`);
       console.log(`  Total posts: ${allPosts.length}\n`);
 
       // Display first few posts as examples

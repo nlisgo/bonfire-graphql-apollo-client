@@ -7,6 +7,7 @@ import fetch from 'cross-fetch';
 export interface ApolloClientConfig {
   uri: string;
   headers?: Record<string, string>;
+  timeout?: number; // Request timeout in milliseconds
 }
 
 /**
@@ -15,9 +16,21 @@ export interface ApolloClientConfig {
  * @returns Configured Apollo Client instance
  */
 export function createApolloClient(config: ApolloClientConfig) {
+  // Create a custom fetch with timeout support
+  const timeoutFetch = (url: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
+    const timeout = config.timeout || 20000; // Default 20 second timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    return fetch(url as any, {
+      ...options,
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId));
+  };
+
   const httpLink = new HttpLink({
     uri: config.uri,
-    fetch,
+    fetch: timeoutFetch as any,
   });
 
   // Optional: Add authentication or custom headers
