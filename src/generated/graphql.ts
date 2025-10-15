@@ -24,8 +24,6 @@ export type Activity = {
   canonicalUri?: Maybe<Scalars['String']['output']>;
   date?: Maybe<Scalars['DateTime']['output']>;
   id?: Maybe<Scalars['ID']['output']>;
-  /** Media attached to this activity (TODO) */
-  media?: Maybe<Media>;
   object?: Maybe<AnyContext>;
   objectId?: Maybe<Scalars['String']['output']>;
   objectPostContent?: Maybe<PostContent>;
@@ -215,18 +213,15 @@ export type MeNotificationsArgs = {
 
 export type Media = {
   __typename?: 'Media';
-  /** All activities associated with this media (TODO) */
-  activities?: Maybe<Array<Maybe<Activity>>>;
-  /** An activity associated with this media */
-  activity?: Maybe<Activity>;
   creator?: Maybe<AnyCharacter>;
+  description?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
+  label?: Maybe<Scalars['String']['output']>;
   mediaType?: Maybe<Scalars['String']['output']>;
   metadata?: Maybe<Scalars['JSON']['output']>;
-  /** All objects associated with this media (TODO) */
-  objects?: Maybe<Array<Maybe<AnyContext>>>;
   path?: Maybe<Scalars['String']['output']>;
   size?: Maybe<Scalars['Int']['output']>;
+  url?: Maybe<Scalars['String']['output']>;
 };
 
 export type MediaConnection = {
@@ -239,6 +234,17 @@ export type MediaEdge = {
   __typename?: 'MediaEdge';
   cursor?: Maybe<Scalars['String']['output']>;
   node?: Maybe<Media>;
+};
+
+export type MediaFilter = {
+  /** Filter by creator ID */
+  creatorId?: InputMaybe<Scalars['ID']['input']>;
+  /** The ID of the media */
+  id?: InputMaybe<Scalars['ID']['input']>;
+  /** Filter by media type (e.g., 'image/png') */
+  mediaType?: InputMaybe<Scalars['String']['input']>;
+  /** Filter by media type category (e.g., 'image', 'video', 'audio') */
+  mediaTypeCategory?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ObjectFilter = {
@@ -334,6 +340,8 @@ export type Replied = {
 
 export type RootMutationType = {
   __typename?: 'RootMutationType';
+  /** Add media by URI (get or insert - idempotent unless refetch_and_update is true) */
+  addMediaByUri?: Maybe<Media>;
   /** Share the current user identity with a team member. This will give them full access to the currently authenticated user identity. Warning: anyone you add will have full access over this user identity, meaning they can post as this user, read private messages, etc. */
   addTeamMember?: Maybe<Scalars['String']['output']>;
   boost?: Maybe<Activity>;
@@ -348,6 +356,8 @@ export type RootMutationType = {
   createUser?: Maybe<Me>;
   /** Delete more or less anything */
   delete?: Maybe<AnyContext>;
+  /** Delete a media item */
+  deleteMedia?: Maybe<Scalars['Boolean']['output']>;
   flag?: Maybe<Activity>;
   follow?: Maybe<Activity>;
   like?: Maybe<Activity>;
@@ -365,8 +375,20 @@ export type RootMutationType = {
   tag?: Maybe<Scalars['Boolean']['output']>;
   /** Update a category */
   updateCategory?: Maybe<Category>;
+  /** Update media metadata */
+  updateMedia?: Maybe<Media>;
   /** Edit user profile */
   updateUser?: Maybe<Me>;
+  /** Upload a file */
+  uploadMedia?: Maybe<Media>;
+};
+
+
+export type RootMutationTypeAddMediaByUriArgs = {
+  input: UriInput;
+  refetchAndUpdate?: InputMaybe<Scalars['Boolean']['input']>;
+  toBoundary?: InputMaybe<Scalars['String']['input']>;
+  toCircles?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
 };
 
 
@@ -414,6 +436,11 @@ export type RootMutationTypeCreateUserArgs = {
 
 export type RootMutationTypeDeleteArgs = {
   contextId: Scalars['String']['input'];
+};
+
+
+export type RootMutationTypeDeleteMediaArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -473,9 +500,23 @@ export type RootMutationTypeUpdateCategoryArgs = {
 };
 
 
+export type RootMutationTypeUpdateMediaArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type RootMutationTypeUpdateUserArgs = {
   images?: InputMaybe<ImagesUpload>;
   profile?: InputMaybe<ProfileInput>;
+};
+
+
+export type RootMutationTypeUploadMediaArgs = {
+  input: UploadInput;
+  toBoundary?: InputMaybe<Scalars['String']['input']>;
+  toCircles?: InputMaybe<Array<InputMaybe<Scalars['ID']['input']>>>;
 };
 
 export type RootQueryType = {
@@ -488,12 +529,14 @@ export type RootQueryType = {
   category?: Maybe<Category>;
   /** Get activities in a feed */
   feedActivities?: Maybe<ActivityConnection>;
-  /** Get media in a feed (TODO) */
-  feedMedia?: Maybe<MediaConnection>;
   /** Get objects in a feed (TODO) */
   feedObjects?: Maybe<AnyContextConnection>;
   /** Get information about and for the current account and/or user */
   me?: Maybe<Me>;
+  /** Get a single media item by ID */
+  media?: Maybe<Media>;
+  /** Get media items with pagination and filtering */
+  medias?: Maybe<MediaConnection>;
   /** Get an object */
   object?: Maybe<AnyContext>;
   /** Get a post */
@@ -535,7 +578,7 @@ export type RootQueryTypeFeedActivitiesArgs = {
 };
 
 
-export type RootQueryTypeFeedMediaArgs = {
+export type RootQueryTypeFeedObjectsArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<FeedFilters>;
@@ -544,10 +587,15 @@ export type RootQueryTypeFeedMediaArgs = {
 };
 
 
-export type RootQueryTypeFeedObjectsArgs = {
+export type RootQueryTypeMediaArgs = {
+  filter?: InputMaybe<MediaFilter>;
+};
+
+
+export type RootQueryTypeMediasArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
-  filter?: InputMaybe<FeedFilters>;
+  filter?: InputMaybe<MediaFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -619,6 +667,24 @@ export type Tag = {
   summary?: Maybe<Scalars['String']['output']>;
   /** Objects that were tagged with this tag */
   tagged?: Maybe<Array<Maybe<AnyContext>>>;
+};
+
+export type UploadInput = {
+  /** Optional description */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** The file to upload */
+  file: Scalars['Upload']['input'];
+  /** Optional name/label for the file */
+  name?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type UriInput = {
+  /** Optional description */
+  description?: InputMaybe<Scalars['String']['input']>;
+  /** Optional name/label for the media */
+  name?: InputMaybe<Scalars['String']['input']>;
+  /** The URI/URL of the media to add */
+  uri: Scalars['String']['input'];
 };
 
 export type User = {
